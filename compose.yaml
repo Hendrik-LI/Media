@@ -119,23 +119,23 @@ services:
 # is a Library Manager, automating the management and meta data for your eBooks and Comic media files
 ############################
 
-  readarr:
-    image: lscr.io/linuxserver/readarr:develop
-    container_name: readarr
-    network_mode: "service:gluetun"
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Etc/UTC
-    volumes:
-      - /media/arr/readarr/config:/config
-      - /media/arr/readarr/books:/books #optional
-      - /media/arr/qbittorrent/downloads:/downloads #optional
-    restart: unless-stopped
-    depends_on:
-      gluetun:
-        condition: service_healthy
-        restart: true
+  # readarr:
+  #   image: lscr.io/linuxserver/readarr:develop
+  #   container_name: readarr
+  #   network_mode: "service:gluetun"
+  #   environment:
+  #     - PUID=1000
+  #     - PGID=1000
+  #     - TZ=Etc/UTC
+  #   volumes:
+  #     - /media/arr/readarr/config:/config
+  #     - /media/arr/readarr/books:/books #optional
+  #     - /media/arr/qbittorrent/downloads:/downloads #optional
+  #   restart: unless-stopped
+  #   depends_on:
+  #     gluetun:
+  #       condition: service_healthy
+  #       restart: true
     
 ############################
 # QBITTORRENT
