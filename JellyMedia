@@ -1,0 +1,228 @@
+---
+services:
+
+############################
+# RADARR
+# Radarr is a Library Manager, automating the management and meta data for your Movie media files
+############################
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    network_mode: "service:gluetun"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - /media/arr/radarr/config:/config
+      - /media/arr/radarr/movies:/movies #optional
+      - /media/arr/qbittorrent/downloads:/downloads #optional
+    restart: unless-stopped
+    depends_on:
+      gluetun:
+        condition: service_healthy
+        restart: true
+    
+############################
+# SONARR
+# Sonarr is a Library Manager, automating the management and meta data for your TV Shows (series) media files	
+############################
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    network_mode: "service:gluetun"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - /media/arr/sonarr/config:/config
+      - /media/arr/sonarr/tvseries:/tv #optional
+      - /media/arr/qbittorrent/downloads:/downloads #optional
+    restart: unless-stopped
+    depends_on:
+      gluetun:
+        condition: service_healthy
+        restart: true
+    
+############################
+# PROWLARR
+# Prowlarr manages and integrates indexers for various media download applications, automating search and download processes
+############################
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    network_mode: "service:gluetun"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - /media/arr/prowlarr/config:/config
+    restart: unless-stopped
+    depends_on:
+      gluetun:
+        condition: service_healthy
+        restart: true
+
+############################
+# BAZARR
+# Bazarr automates the downloading of subtitles for Movies and TV Shows
+############################
+
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    network_mode: "service:gluetun"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - /media/arr/bazarr/config:/config
+      - /media/arr/radarr/movies:/movies #optional
+      - /media/arr/sonarr/tvseries:/tv #optional
+    restart: unless-stopped
+    depends_on:
+      gluetun:
+        condition: service_healthy
+        restart: true
+    
+############################
+# LIDARR
+# Lidarr is a Library Manager, automating the management and meta data for your music media files	
+############################
+
+  lidarr:
+    image: lscr.io/linuxserver/lidarr:latest
+    container_name: lidarr
+    network_mode: "service:gluetun"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - /media/arr/lidarr/config:/config
+      - /media/arr/lidarr/music:/music #optional
+      - /media/arr/qbittorrent/downloads:/downloads #optional
+    restart: unless-stopped
+    depends_on:
+      gluetun:
+        condition: service_healthy
+        restart: true
+    
+############################
+# READARR
+# is a Library Manager, automating the management and meta data for your eBooks and Comic media files
+############################
+
+  readarr:
+    image: lscr.io/linuxserver/readarr:develop
+    container_name: readarr
+    network_mode: "service:gluetun"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - /media/arr/readarr/config:/config
+      - /media/arr/readarr/books:/books #optional
+      - /media/arr/qbittorrent/downloads:/downloads #optional
+    restart: unless-stopped
+    depends_on:
+      gluetun:
+        condition: service_healthy
+        restart: true
+    
+############################
+# QBITTORRENT
+# qBittorrent is a peer-to-peer file sharing application that facilitates downloading and uploading torrents			
+############################
+
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    network_mode: "service:gluetun"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - WEBUI_PORT=8080
+      - TORRENTING_PORT=6881
+    volumes:
+      - /media/arr/qbittorrent/config:/config
+      - /media/arr/qbittorrent/downloads:/downloads #optional
+    restart: unless-stopped
+    depends_on:
+      gluetun:
+        condition: service_healthy
+        restart: true
+    healthcheck:
+      test: ping -c 1 www.google.com || exit 1
+      interval: 60s
+      retries: 3
+      start_period: 20s
+      timeout: 10s
+    
+############################
+# JELLYFIN
+# Jellyfin is a media server that organises, streams, and manages multimedia content for users	
+############################
+
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: jellyfin
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - /media/arr/jellyfin/config:/config
+      - /media/arr/sonarr/tvseries:/data/tvshows
+      - /media/arr/radarr/movies:/data/movies
+    ports:
+      - 8096:8096
+      - 8920:8920 #optional
+      - 7359:7359/udp #optional
+      - 1900:1900/udp #optional
+    restart: unless-stopped
+    
+############################
+# GLUETUN
+# Gluetun routes network traffic through a VPN, ensuring privacy and security for Docker containers
+############################
+
+  gluetun:
+    image: qmcgaw/gluetun
+    container_name: gluetun
+    ports:
+      - 9696:9696 #prowlarr
+      - 7878:7878 #radarr
+      - 8989:8989 #sonarr
+      - 6767:6767 #bazarr
+      - 8686:8686 #lidarr
+      - 8787:8787 #readarr
+      - 8080:8080 #qbittorrent
+      - 6881:6881 #qbittorrent
+      - 6881:6881/udp #qbittorrent
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - VPN_SERVICE_PROVIDER=nordvpn
+      - VPN_TYPE=openvpn # or wireguard
+      - OPENVPN_USER=6EyWwdRzhWEnoPpr91VfS3k2
+      - OPENVPN_PASSWORD=5ZaKaZjYpr6Yo8DFnyDGLpDf
+      - SERVER_COUNTRIES=South Africa,Netherlands
+    healthcheck:
+      test: ping -c 1 www.google.com || exit 1
+      interval: 20s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+      
+############################
